@@ -9,15 +9,39 @@ import os
 def convert_markdown_to_html(content):
     """Convert markdown content to HTML"""
     html_lines = []
+    current_list = []
+    in_list = False
     
     for line in content.split('\n'):
         # Skip empty lines
         if not line.strip():
+            if in_list:
+                # Close the current list
+                html_lines.append("<ul>")
+                for item in current_list:
+                    html_lines.append(f"<li>{item}</li>")
+                html_lines.append("</ul>")
+                current_list = []
+                in_list = False
             continue
+            
+        # Handle unordered lists
+        if line.strip().startswith('- '):
+            in_list = True
+            current_list.append(line.strip()[2:])
+            continue
+            
+        # If we were in a list and now we're not
+        if in_list and not line.strip().startswith('- '):
+            html_lines.append("<ul>")
+            for item in current_list:
+                html_lines.append(f"<li>{item}</li>")
+            html_lines.append("</ul>")
+            current_list = []
+            in_list = False
             
         # Handle headers
         if line.startswith('#'):
-            # Count the number of # to determine header level
             level = 0
             for char in line:
                 if char == '#':
@@ -25,14 +49,20 @@ def convert_markdown_to_html(content):
                 else:
                     break
                     
-            # Ensure header level is between 1 and 6
             if 1 <= level <= 6:
-                # Remove the #s and leading/trailing spaces
                 header_text = line[level:].strip()
                 html_lines.append(f"<h{level}>{header_text}</h{level}>")
         else:
-            html_lines.append(line)
-            
+            if not in_list:
+                html_lines.append(line)
+    
+    # If we end the file while still in a list
+    if in_list:
+        html_lines.append("<ul>")
+        for item in current_list:
+            html_lines.append(f"<li>{item}</li>")
+        html_lines.append("</ul>")
+    
     return '\n'.join(html_lines)
 
 
