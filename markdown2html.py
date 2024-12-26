@@ -6,6 +6,36 @@ import sys
 import os
 
 
+def convert_markdown_to_html(content):
+    """Convert markdown content to HTML"""
+    html_lines = []
+    
+    for line in content.split('\n'):
+        # Skip empty lines
+        if not line.strip():
+            continue
+            
+        # Handle headers
+        if line.startswith('#'):
+            # Count the number of # to determine header level
+            level = 0
+            for char in line:
+                if char == '#':
+                    level += 1
+                else:
+                    break
+                    
+            # Ensure header level is between 1 and 6
+            if 1 <= level <= 6:
+                # Remove the #s and leading/trailing spaces
+                header_text = line[level:].strip()
+                html_lines.append(f"<h{level}>{header_text}</h{level}>")
+        else:
+            html_lines.append(line)
+            
+    return '\n'.join(html_lines)
+
+
 def main():
     """Main function to handle markdown to html conversion"""
     # Vérifier le nombre d'arguments
@@ -28,9 +58,12 @@ def main():
         with open(markdown_file, 'r') as md:
             content = md.read()
 
-        # Créer le fichier HTML (pour l'instant, juste copier le contenu)
+        # Convertir le markdown en HTML
+        html_content = convert_markdown_to_html(content)
+
+        # Écrire le contenu HTML dans le fichier de sortie
         with open(html_file, 'w') as html:
-            html.write(content)
+            html.write(html_content)
 
     except Exception as e:
         sys.exit(1)
